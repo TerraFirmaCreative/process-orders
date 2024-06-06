@@ -111,7 +111,7 @@ def upload_images(dest):
     return urls
 
 def main(args):
-    # batch_upscale(args.input, args.output)
+    batch_upscale(args.input, args.output)
     urls = upload_images(args.output)
 
     with open("./urls.json", "w+") as file:
