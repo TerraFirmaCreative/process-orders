@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<Request>
+  <Customer>terrafirmacreative</Customer>
+  <Key>ouiaer789405tha</Key>
+  <RequestType>New</RequestType>
+  <Order>
+    <OrderId></OrderId>
+    <ShippingMethod></ShippingMethod>
+    <OrderInfo>
+      <FirstName></FirstName>
+      <LastName></LastName>
+      <Address1></Address1>
+      <City></City>
+      <State></State>
+      <PostalCode></PostalCode>
+      <CountryCode></CountryCode>
+      <PhoneNumber></PhoneNumber>
+      <OrderDate></OrderDate>
+    </OrderInfo>
+    <Cases>
+      <CaseInfo>
+        <CaseId></CaseId>
+        <CaseType></CaseType>
+        <Quantity>1</Quantity>
+        <PrintImage>
+          <ImageType></ImageType>
+          <Url></Url>
+        </PrintImage>
+      </CaseInfo>
+    </Cases>
+  </Order>
+</Request>
