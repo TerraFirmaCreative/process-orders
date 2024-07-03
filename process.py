@@ -75,7 +75,7 @@ def send_api_request(xml):
     print(res.content)
 
 def batch_upscale(src, dest):
-    result = subprocess.run(f'/Applications/Topaz\ Photo\ AI.app/Contents/MacOS/Topaz\ Photo\ AI --cli {src} --output {dest} --format jpg --verbose')
+    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', 'jpg', '--verbose'])
     result.check_returncode()
 
     for file in os.listdir(src):
@@ -88,7 +88,7 @@ def batch_upscale(src, dest):
             print(file)
             shutil.move(os.path.join(dest, file), os.path.join(src, file))
     
-    result = subprocess.run(f'/Applications/Topaz\ Photo\ AI.app/Contents/MacOS/Topaz\ Photo\ AI --cli {src} --output {dest} --format jpg --verbose')
+    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', 'jpg', '--verbose'])
     result.check_returncode()
 
 def upload_images(dest):
