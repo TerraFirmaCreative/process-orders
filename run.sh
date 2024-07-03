@@ -1,3 +1,3 @@
 . .venv/bin/activate
-python process.py
+python3 process.py
 deactivate
