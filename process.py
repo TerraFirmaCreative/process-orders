@@ -8,8 +8,16 @@ from dotenv import load_dotenv
 import boto3
 import uuid
 import json
+import datetime
+from gql import gql, Client
+from gql.transport.aiohttp import AIOHTTPTransport
 
 load_dotenv()
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--input', type=str, default='./batch_in')
+parser.add_argument('--output', type=str, default='./batch_out')
 
 s3Client = boto3.client(
     's3',
@@ -17,10 +25,59 @@ s3Client = boto3.client(
     aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
 )
 
-parser = argparse.ArgumentParser()
+adminTransport = AIOHTTPTransport(url=f"https://{os.environ.get('SHOPIFY_STORE_DOMAIN')}/admin/api/2024-07/graphql.json", headers={
+    'Content-Type': 'application/json',
+    'X-Shopify-Access-Token': os.environ.get('SHOPIFY_ADMIN_ACCESS_TOKEN')
+})
 
-parser.add_argument('--input', type=str, default='./batch_in')
-parser.add_argument('--output', type=str, default='./batch_out')
+adminClient = Client(transport=adminTransport, fetch_schema_from_transport=True)
+
+def fetch_orders():
+    pending_orders = adminClient.execute(gql(
+        """
+        query getOrders($query: String) {
+            orders(query: $query, first: 250) {
+                nodes {
+                    name
+                    note
+                  	createdAt
+                    phone
+                    fulfillable
+                    requiresShipping
+                    lineItems(first:250) {
+                      	nodes {
+                        	currentQuantity
+                        	image {
+                         	   url
+                        	}
+                        }
+                    }
+                    shippingAddress {
+                        address1
+                        address2
+                        city
+                        company
+                        country
+                        countryCodeV2
+                        firstName
+                        lastName
+                        name
+                        phone
+                        province
+                        provinceCode
+                        zip
+                    }
+
+                }
+            }
+        }
+        """
+    ), variable_values={
+        "query": f"status:Unfulfilled AND created_at:>={datetime.datetime.fromisoformat((datetime.date.today() - datetime.timedelta(days=1)).isoformat()).isoformat()}"
+    })
+
+    print(pending_orders)
+
 
 def generate_new_order(order_id, urls):
     tree = ET.parse('./xml/new_order.xml')
@@ -111,11 +168,12 @@ def upload_images(dest):
     return urls
 
 def main(args):
-    batch_upscale(args.input, args.output)
-    urls = upload_images(args.output)
+    fetch_orders()
+    # batch_upscale(args.input, args.output)
+    # urls = upload_images(args.output)
 
-    with open("./urls.json", "w+") as file:
-        json.dump(urls, file)
+    # with open("./urls.json", "w+") as file:
+        # json.dump(urls, file)
 
     # new_order_xml = generate_new_order(uploaded_files)
     # send_api_request()
