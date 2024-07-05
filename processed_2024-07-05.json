@@ -1,0 +1,36 @@
+{
+  "#1002": {
+    "createdAt": "2024-05-06T12:54:30Z",
+    "fulfillable": true,
+    "lineItems": {
+      "nodes": [
+        {
+          "currentQuantity": 1,
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0789/0052/7412/files/hj12342794_fresh20air_60b960d1-4790-4266-9e1c-4b29c2024c02.png?v=1712953542"
+          }
+        }
+      ]
+    },
+    "name": "#1002",
+    "note": false,
+    "phone": null,
+    "requiresShipping": true,
+    "s3_url": "https://terrafirma-upscaled.s3.amazonaws.com/b421a765-74ca-43fe-a3d8-1a771a1cfc2b.jpg?response-content-type=image%2Fjpeg&response-content-disposition=inline&AWSAccessKeyId=AKIAXQHXPKSAJPZLB3MZ&Signature=3QSEDllWFx4Bdc2QBsEzbDIVJFE%3D&Expires=1720813498",
+    "shippingAddress": {
+      "address1": "11 Walker Street",
+      "address2": null,
+      "city": "South Fremantle",
+      "company": null,
+      "country": "Australia",
+      "countryCodeV2": "AU",
+      "firstName": "Phillip",
+      "lastName": "Jenkins",
+      "name": "Phillip Jenkins",
+      "phone": null,
+      "province": "Western Australia",
+      "provinceCode": "WA",
+      "zip": "6162"
+    }
+  }
+}

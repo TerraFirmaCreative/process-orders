@@ -10,6 +10,7 @@ import uuid
 import json
 import datetime
 from gql import gql, Client
+from fixtures.responses import orders_response
 from gql.transport.aiohttp import AIOHTTPTransport
 
 load_dotenv()
@@ -33,93 +34,103 @@ adminTransport = AIOHTTPTransport(url=f"https://{os.environ.get('SHOPIFY_STORE_D
 adminClient = Client(transport=adminTransport, fetch_schema_from_transport=True)
 
 def fetch_orders():
-    pending_orders = adminClient.execute(gql(
-        """
-        query getOrders($query: String) {
-            orders(query: $query, first: 250) {
-                nodes {
-                    name
-                    note
-                  	createdAt
-                    phone
-                    fulfillable
-                    requiresShipping
-                    lineItems(first:250) {
-                      	nodes {
-                        	currentQuantity
-                        	image {
-                         	   url
-                        	}
-                        }
-                    }
-                    shippingAddress {
-                        address1
-                        address2
-                        city
-                        company
-                        country
-                        countryCodeV2
-                        firstName
-                        lastName
-                        name
-                        phone
-                        province
-                        provinceCode
-                        zip
-                    }
+    # pending_orders = adminClient.execute(gql(
+    #     """
+    #     query getOrders($query: String) {
+    #         orders(query: $query, first: 250) {
+    #             nodes {
+    #                 name
+    #                 note
+    #               	createdAt
+    #                 phone
+    #                 fulfillable
+    #                 requiresShipping
+    #                 lineItems(first:250) {
+    #                   	nodes {
+    #                     	currentQuantity
+    #                     	image {
+    #                      	   url
+    #                     	}
+    #                     }
+    #                 }
+    #                 shippingAddress {
+    #                     address1
+    #                     address2
+    #                     city
+    #                     company
+    #                     country
+    #                     countryCodeV2
+    #                     firstName
+    #                     lastName
+    #                     name
+    #                     phone
+    #                     province
+    #                     provinceCode
+    #                     zip
+    #                 }
 
-                }
-            }
-        }
-        """
-    ), variable_values={
-        "query": f"status:Unfulfilled AND created_at:>={datetime.datetime.fromisoformat((datetime.date.today() - datetime.timedelta(days=1)).isoformat()).isoformat()}"
-    })
+    #             }
+    #         }
+    #     }
+    #     """
+    # ), variable_values={
+    #     "query": "status:Unfulfilled"
+    #     # "query": f"status:Unfulfilled AND created_at:>={datetime.datetime.fromisoformat((datetime.date.today() - datetime.timedelta(days=1)).isoformat()).isoformat()}"
+    # })
 
-    print(pending_orders)
+    orders = orders_response.get('data')['orders']['nodes']
 
+    order_dict = {}
+    for order in orders:
+        order_dict[order['name']] = order
 
-def generate_new_order(order_id, urls):
-    tree = ET.parse('./xml/new_order.xml')
+    print(order_dict)
+    return order_dict
+
+def new_request(orders: dict):
+    tree = tree = ET.parse('./xml/request.xml')
     root = tree.getroot()
-    
-    order = root.find('Order')
 
-    order.find('OrderId').text = str(order_id)
-    order.find('ShippingMethod').text = 'FC'
-    order_info = order.find('OrderInfo')
+    for order_id, order in orders.items():
+        order_element = ET.parse('./xml/order_element.xml').getroot()
+       
+        order_element.find('OrderId').text = order['name']
+        order_element.find('ShippingMethod').text = 'FC' # """NEED TO SET UP SHIPPING OPTIONS"""
+        order_info = order_element.find('OrderInfo')
 
-    order_info.find('FirstName').text = 'Tymoteusz'
-    order_info.find('LastName').text = 'Suszczynski'
-    order_info.find('Address1').text = '123 Abc Street'
-    order_info.find('City').text = 'Perth'
-    order_info.find('State').text = 'WA'
-    order_info.find('PostalCode').text = '6000'
-    order_info.find('CountryCode').text = 'AU'
-    order_info.find('PhoneNumber').text = '12369978040'
-    order_info.find('OrderDate').text = '01/01/2024 00:00'
-  
-
-    cases = order.findall('Cases')
-
-    for url in urls:
-        cases.insert(0, ET.Element('Case'))
-        case
-
-    for i, case in enumerate(cases):
-        case_info = case.find('CaseInfo')
-        case_info.find('CaseId').text = f'CASE_{i}'
-        case_info.find('CaseType').text = 'yogamat'
-        case_info.find('Quantity').text = '1'
-        print_image = case_info.find('PrintImage')
-        print_image.find('ImageType').text = 'png'
-        print_image.find('Url').text = 'https://cdn.shopify.com/s/files/1/0789/0052/7412/files/hj12342794_Pastel_colours._Rain._Mountains._Flat_geometric_shap_202ffe91-f5ce-4309-943d-e4e35f231709.png'
+        order_info.find('FirstName').text = order['shippingAddress']['firstName']
+        order_info.find('LastName').text = order['shippingAddress']['lastName']
+        order_info.find('Address1').text = order['shippingAddress']['address1']
+        order_info.find('Address2').text = order['shippingAddress']['address2']
+        order_info.find('City').text = order['shippingAddress']['city']
+        order_info.find('State').text = order['shippingAddress']['province']
+        order_info.find('PostalCode').text = order['shippingAddress']['zip']
+        order_info.find('CountryCode').text = order['shippingAddress']['countryCodeV2']
+        order_info.find('PhoneNumber').text = order['shippingAddress']['phone']
+        order_info.find('OrderDate').text = order['createdAt']
         
-    tree.write('./out/new_order_output.xml')
-    
-    new_order_xml_string = ET.tostring(root)
+        cases = order_element.find('Cases')
+        for i, line_item in enumerate(order['lineItems']['nodes']):
+            cases.append(ET.Element('CaseInfo'))
+            case_info = cases.findall('CaseInfo')[-1]
 
-    return new_order_xml_string
+            case_info.append(ET.Element('CaseId'))
+            case_info.append(ET.Element('CaseType'))
+            case_info.append(ET.Element('Quantity'))
+            case_info.append(ET.Element('PrintImage'))
+            print_image = case_info.find('PrintImage')
+            print_image.append(ET.Element('ImageType'))
+            print_image.append(ET.Element('Url'))
+
+            case_info.find('CaseId').text = f"{order['name']}_{i}"
+            case_info.find('CaseType').text = "yogamat"
+            case_info.find('Quantity').text = str(line_item['currentQuantity'])
+            print_image.find('ImageType').text = 'jpeg'
+            print_image.find('Url').text = line_item['image']['url']
+
+        root.append(order_element)
+
+    tree.write('./out/new_order_output.xml')
 
 def send_api_request(xml): 
     print(xml)
@@ -132,7 +143,7 @@ def send_api_request(xml):
     print(res.content)
 
 def batch_upscale(src, dest):
-    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', 'jpg', '--verbose'])
+    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', 'jpeg', '--verbose'])
     result.check_returncode()
 
     for file in os.listdir(src):
@@ -145,38 +156,58 @@ def batch_upscale(src, dest):
             print(file)
             shutil.move(os.path.join(dest, file), os.path.join(src, file))
     
-    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', 'jpg', '--verbose'])
+    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', 'jpeg', '--verbose'])
     result.check_returncode()
 
-def upload_images(dest):
-    urls = []
-
+def upload_images(dest, orders):
     for file in os.listdir(dest):
+        print("Uploading...", file)
+
         filepath = os.path.join(dest, file)
+        order_id, line_item_number = os.path.splitext(file)[0].split('_')
         key = f"{uuid.uuid4()}.jpg"
+
         s3Client.upload_file(filepath, 'terrafirma-upscaled', key, ExtraArgs={
             'ContentType': 'image/jpeg'
         })
+        
         url = s3Client.generate_presigned_url('get_object', Params={
             'Bucket': 'terrafirma-upscaled',
             'Key': key,
             'ResponseContentType': 'image/jpeg',
             'ResponseContentDisposition': 'inline'
         }, ExpiresIn=604700)
-        urls.append(url)
+        orders[order_id]['s3_url'] = url
 
-    return urls
+    return orders
+
+def download_batch(orders: dict, input_dir):
+    urls = set()
+
+    if len(orders.keys()) > 0:
+        for f in os.listdir(input_dir):
+            os.remove(os.path.join(input_dir, f))
+
+
+    for order_id, order in orders.items():
+        for i, line_item in enumerate(order['lineItems']['nodes']):
+            print(f"Found: {line_item['image']['url']}")
+            req = requests.get(line_item['image']['url'])
+            with open(os.path.join(input_dir, f"{order_id}_{i}.png"), "wb") as f:
+                f.write(req.content)
+
 
 def main(args):
-    fetch_orders()
+    order_dict = fetch_orders()
+    download_batch(order_dict, args.input)
     # batch_upscale(args.input, args.output)
-    # urls = upload_images(args.output)
+    order_dict = upload_images(args.output, order_dict)
 
-    # with open("./urls.json", "w+") as file:
-        # json.dump(urls, file)
-
-    # new_order_xml = generate_new_order(uploaded_files)
-    # send_api_request()
+    with open(f"./processed_{datetime.date.today()}.json", "w+") as file:
+        json.dump(order_dict, file, indent=2, sort_keys=True)
+    
+    spoke_request_xml = new_request(order_dict)
+    send_api_request(spoke_request_xml)
 
 
 if __name__ == "__main__":

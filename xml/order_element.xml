@@ -1,8 +1,3 @@
-<?xml version="1.0"?>
-<Request>
-  <Customer>terrafirmacreative</Customer>
-  <Key>ouiaer789405tha</Key>
-  <RequestType>New</RequestType>
   <Order>
     <OrderId></OrderId>
     <ShippingMethod></ShippingMethod>
@@ -10,6 +5,7 @@
       <FirstName></FirstName>
       <LastName></LastName>
       <Address1></Address1>
+      <Address2></Address2>
       <City></City>
       <State></State>
       <PostalCode></PostalCode>
@@ -18,15 +14,5 @@
       <OrderDate></OrderDate>
     </OrderInfo>
     <Cases>
-      <CaseInfo>
-        <CaseId></CaseId>
-        <CaseType></CaseType>
-        <Quantity>1</Quantity>
-        <PrintImage>
-          <ImageType></ImageType>
-          <Url></Url>
-        </PrintImage>
-      </CaseInfo>
     </Cases>
   </Order>
-</Request>
