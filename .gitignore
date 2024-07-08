@@ -1,3 +1,5 @@
 .env*
 .venv
 out
+batch_in
+batch_out

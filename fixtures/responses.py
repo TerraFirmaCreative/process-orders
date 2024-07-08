@@ -3,28 +3,9 @@ orders_response = {
     "orders": {
       "nodes": [
         {
-          "name": "#1001",
+          "name": "#1003",
           "note": None,
-          "createdAt": "2024-05-03T12:08:35Z",
-          "phone": None,
-          "fulfillable": False,
-          "requiresShipping": False,
-          "lineItems": {
-            "nodes": [
-              {
-                "currentQuantity": 1,
-                "image": {
-                  "url": "https://cdn.shopify.com/s/files/1/0789/0052/7412/files/hj12342794_psychadelic20ayahuasca20fractals20symmetry_de23587f-6df2-4ac0-b6fb-0f9a3d36a263.png?v=1712953582"
-                }
-              }
-            ]
-          },
-          "shippingAddress": False
-        },
-        {
-          "name": "#1002",
-          "note": False,
-          "createdAt": "2024-05-06T12:54:30Z",
+          "createdAt": "2024-07-08T19:41:29Z",
           "phone": None,
           "fulfillable": True,
           "requiresShipping": True,
@@ -33,25 +14,28 @@ orders_response = {
               {
                 "currentQuantity": 1,
                 "image": {
-                  "url": "https://cdn.shopify.com/s/files/1/0789/0052/7412/files/hj12342794_fresh20air_60b960d1-4790-4266-9e1c-4b29c2024c02.png?v=1712953542"
+                  "url": "https://cdn.shopify.com/s/files/1/0789/0052/7412/files/7e82aea8-f61d-46ed-8a2e-048c20e3c5b6_V3.png?v=1716767400"
                 }
               }
             ]
           },
           "shippingAddress": {
-            "address1": "11 Walker Street",
+            "address1": "30 Davilak Avenue",
             "address2": None,
-            "city": "South Fremantle",
+            "city": "Hamilton Hill",
             "company": None,
             "country": "Australia",
             "countryCodeV2": "AU",
-            "firstName": "Phillip",
-            "lastName": "Jenkins",
-            "name": "Phillip Jenkins",
+            "firstName": "Tymoteusz",
+            "lastName": "Suszczynski",
+            "name": "Tymoteusz Suszczynski",
             "phone": None,
             "province": "Western Australia",
             "provinceCode": "WA",
-            "zip": "6162"
+            "zip": "6163"
+          },
+          "shippingLine": {
+            "code": "Standard"
           }
         }
       ]
@@ -59,11 +43,11 @@ orders_response = {
   },
   "extensions": {
     "cost": {
-      "requestedQueryCost": 288,
-      "actualQueryCost": 8,
+      "requestedQueryCost": 299,
+      "actualQueryCost": 9,
       "throttleStatus": {
         "maximumAvailable": 2000,
-        "currentlyAvailable": 1992,
+        "currentlyAvailable": 1991,
         "restoreRate": 100
       }
     },
@@ -72,11 +56,33 @@ orders_response = {
         "path": [
           "orders"
         ],
-        "query": "status:Unfulfilled",
+        "query": "status:Unfulfilled AND financial_status:PAID AND created_at:>=2024-07-07T00:00:00",
         "parsed": {
-          "field": "status",
-          "match_all": "Unfulfilled"
-        }
+          "and": [
+            {
+              "field": "created_at",
+              "range_gte": "2024-07-07T00:00:00+08:00"
+            },
+            {
+              "field": "status",
+              "match_all": "Unfulfilled"
+            },
+            {
+              "field": "financial_status",
+              "match_all": "PAID"
+            },
+            {
+              "field": "00",
+              "match_all": "00"
+            }
+          ]
+        },
+        "warnings": [
+          {
+            "field": "00",
+            "message": "Invalid search field for this query."
+          }
+        ]
       }
     ]
   }

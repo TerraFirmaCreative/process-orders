@@ -16,7 +16,7 @@
     "note": false,
     "phone": null,
     "requiresShipping": true,
-    "s3_url": "https://terrafirma-upscaled.s3.amazonaws.com/b421a765-74ca-43fe-a3d8-1a771a1cfc2b.jpg?response-content-type=image%2Fjpeg&response-content-disposition=inline&AWSAccessKeyId=AKIAXQHXPKSAJPZLB3MZ&Signature=3QSEDllWFx4Bdc2QBsEzbDIVJFE%3D&Expires=1720813498",
+    "s3_url": "https://terrafirma-upscaled.s3.amazonaws.com/5f792ac7-7630-4615-ad74-7e66d65e9aeb.jpg?response-content-type=image%2Fjpeg&response-content-disposition=inline&AWSAccessKeyId=AKIAXQHXPKSAJPZLB3MZ&Signature=eKpKUMyNo9t4sTDrkNXqdAY6pQI%3D&Expires=1720817133",
     "shippingAddress": {
       "address1": "11 Walker Street",
       "address2": null,

@@ -19,6 +19,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--input', type=str, default='./batch_in')
 parser.add_argument('--output', type=str, default='./batch_out')
+parser.add_argument('--format', type=str, default='png')
+
 
 s3Client = boto3.client(
     's3',
@@ -33,52 +35,64 @@ adminTransport = AIOHTTPTransport(url=f"https://{os.environ.get('SHOPIFY_STORE_D
 
 adminClient = Client(transport=adminTransport, fetch_schema_from_transport=True)
 
+shippingCodeToPlaceholder = {
+    "Express": "FC",
+    "Standard": "TD",
+    "": "PM",
+    "": "SD",
+    "": "ON",
+}
+
 def fetch_orders():
     # pending_orders = adminClient.execute(gql(
     #     """
-    #     query getOrders($query: String) {
-    #         orders(query: $query, first: 250) {
-    #             nodes {
-    #                 name
-    #                 note
-    #               	createdAt
-    #                 phone
-    #                 fulfillable
-    #                 requiresShipping
-    #                 lineItems(first:250) {
-    #                   	nodes {
-    #                     	currentQuantity
-    #                     	image {
-    #                      	   url
-    #                     	}
-    #                     }
-    #                 }
-    #                 shippingAddress {
-    #                     address1
-    #                     address2
-    #                     city
-    #                     company
-    #                     country
-    #                     countryCodeV2
-    #                     firstName
-    #                     lastName
-    #                     name
-    #                     phone
-    #                     province
-    #                     provinceCode
-    #                     zip
-    #                 }
-
-    #             }
-    #         }
-    #     }
+        # query getOrders($query: String) {
+        #     orders(query: $query, first: 250) {
+        #         nodes {
+        #             name
+        #             note
+        #           	createdAt
+        #             phone
+        #             fulfillable
+        #             requiresShipping
+        #             lineItems(first:250) {
+        #               	nodes {
+        #                 	currentQuantity
+        #                 	image {
+        #                  	   url
+        #                 	}
+        #                 }
+        #             }
+        #             shippingAddress {
+                #         address1
+                #         address2
+                #         city
+                #         company
+                #         country
+                #         countryCodeV2
+                #         firstName
+                #         lastName
+                #         name
+                #         phone
+                #         province
+                #         provinceCode
+                #         zip
+                #     }
+                #     shippingLine {
+                #         code
+                #     }
+                # }
+        #     }
+        # }
     #     """
     # ), variable_values={
     #     "query": "status:Unfulfilled"
-    #     # "query": f"status:Unfulfilled AND created_at:>={datetime.datetime.fromisoformat((datetime.date.today() - datetime.timedelta(days=1)).isoformat()).isoformat()}"
+        # "query": f"status:Unfulfilled AND financial_status:PAID AND created_at:>={datetime.datetime.fromisoformat((datetime.date.today() - datetime.timedelta(days=1)).isoformat()).isoformat()}"
     # })
+    pending_orders = orders_response
 
-    orders = orders_response.get('data')['orders']['nodes']
+    # Filter for filfillable orders
+    orders = [order for order in pending_orders.get('data')['orders']['nodes'] if order['fulfillable']]
 
     order_dict = {}
     for order in orders:
@@ -87,7 +101,7 @@ def fetch_orders():
     print(order_dict)
     return order_dict
 
-def new_request(orders: dict):
+def new_request(orders: dict, format):
     tree = tree = ET.parse('./xml/request.xml')
     root = tree.getroot()
 
@@ -95,7 +109,7 @@ def new_request(orders: dict):
         order_element = ET.parse('./xml/order_element.xml').getroot()
        
         order_element.find('OrderId').text = order['name']
-        order_element.find('ShippingMethod').text = 'FC' # """NEED TO SET UP SHIPPING OPTIONS"""
+        order_element.find('ShippingMethod').text = shippingCodeToPlaceholder[order['shippingLine']['code']] # """NEED TO SET UP SHIPPING OPTIONS"""
         order_info = order_element.find('OrderInfo')
 
         order_info.find('FirstName').text = order['shippingAddress']['firstName']
@@ -125,15 +139,15 @@ def new_request(orders: dict):
             case_info.find('CaseId').text = f"{order['name']}_{i}"
             case_info.find('CaseType').text = "yogamat"
             case_info.find('Quantity').text = str(line_item['currentQuantity'])
-            print_image.find('ImageType').text = 'jpeg'
+            print_image.find('ImageType').text = format
             print_image.find('Url').text = line_item['image']['url']
 
         root.append(order_element)
 
-    tree.write('./out/new_order_output.xml')
+    tree.write('./out/new_order_output.xml', encoding="utf-8", xml_declaration=True)
+    return ET.tostring(root, xml_declaration=True, encoding="utf-8")
 
 def send_api_request(xml): 
-    print(xml)
     res = requests.post(
         'https://api-staging.spokecustom.com/order/submit',
         headers={'Content-Type': 'application/xml'},
@@ -142,8 +156,8 @@ def send_api_request(xml):
 
     print(res.content)
 
-def batch_upscale(src, dest):
-    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', 'jpeg', '--verbose'])
+def batch_upscale(src, dest, format):
+    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', format, '--verbose'])
     result.check_returncode()
 
     for file in os.listdir(src):
@@ -156,7 +170,7 @@ def batch_upscale(src, dest):
             print(file)
             shutil.move(os.path.join(dest, file), os.path.join(src, file))
     
-    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', 'jpeg', '--verbose'])
+    result = subprocess.run(['"/Applications/Topaz Photo AI.app/Contents/MacOS/Topaz Photo AI"', '--cli', src, '--output', dest, '--format', format, '--verbose'])
     result.check_returncode()
 
 def upload_images(dest, orders):
@@ -165,16 +179,16 @@ def upload_images(dest, orders):
 
         filepath = os.path.join(dest, file)
         order_id, line_item_number = os.path.splitext(file)[0].split('_')
-        key = f"{uuid.uuid4()}.jpg"
+        key = f"{uuid.uuid4()}.png"
 
         s3Client.upload_file(filepath, 'terrafirma-upscaled', key, ExtraArgs={
-            'ContentType': 'image/jpeg'
+            'ContentType': 'image/png'
         })
         
         url = s3Client.generate_presigned_url('get_object', Params={
             'Bucket': 'terrafirma-upscaled',
             'Key': key,
-            'ResponseContentType': 'image/jpeg',
+            'ResponseContentType': 'image/png',
             'ResponseContentDisposition': 'inline'
         }, ExpiresIn=604700)
         orders[order_id]['s3_url'] = url
@@ -199,14 +213,15 @@ def download_batch(orders: dict, input_dir):
 
 def main(args):
     order_dict = fetch_orders()
+    print(len(order_dict.keys()))
     download_batch(order_dict, args.input)
-    # batch_upscale(args.input, args.output)
+    # batch_upscale(args.input, args.output, args.format)
     order_dict = upload_images(args.output, order_dict)
 
     with open(f"./processed_{datetime.date.today()}.json", "w+") as file:
         json.dump(order_dict, file, indent=2, sort_keys=True)
     
-    spoke_request_xml = new_request(order_dict)
+    spoke_request_xml = new_request(order_dict, args.format)
     send_api_request(spoke_request_xml)
 
 

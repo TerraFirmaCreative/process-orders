@@ -1,0 +1,39 @@
+{
+  "#1003": {
+    "createdAt": "2024-07-08T19:41:29Z",
+    "fulfillable": true,
+    "lineItems": {
+      "nodes": [
+        {
+          "currentQuantity": 1,
+          "image": {
+            "url": "https://cdn.shopify.com/s/files/1/0789/0052/7412/files/7e82aea8-f61d-46ed-8a2e-048c20e3c5b6_V3.png?v=1716767400"
+          }
+        }
+      ]
+    },
+    "name": "#1003",
+    "note": null,
+    "phone": null,
+    "requiresShipping": true,
+    "s3_url": "https://terrafirma-upscaled.s3.amazonaws.com/cac85d6b-fe5e-4957-910b-ba4f092ada7b.png?response-content-type=image%2Fpng&response-content-disposition=inline&AWSAccessKeyId=AKIAXQHXPKSAJPZLB3MZ&Signature=8xciM3tG0wlNq4NoxkTtWdFgk9o%3D&Expires=1721073059",
+    "shippingAddress": {
+      "address1": "30 Davilak Avenue",
+      "address2": null,
+      "city": "Hamilton Hill",
+      "company": null,
+      "country": "Australia",
+      "countryCodeV2": "AU",
+      "firstName": "Tymoteusz",
+      "lastName": "Suszczynski",
+      "name": "Tymoteusz Suszczynski",
+      "phone": null,
+      "province": "Western Australia",
+      "provinceCode": "WA",
+      "zip": "6163"
+    },
+    "shippingLine": {
+      "code": "Standard"
+    }
+  }
+}
