@@ -213,7 +213,6 @@ def download_batch(orders: dict, input_dir):
 
 def main(args):
     order_dict = fetch_orders()
-    print(len(order_dict.keys()))
     download_batch(order_dict, args.input)
     # batch_upscale(args.input, args.output, args.format)
     order_dict = upload_images(args.output, order_dict)
